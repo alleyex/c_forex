@@ -1,0 +1,46 @@
+# C 編譯產生的檔案
+*.o
+*.obj
+*.exe
+*.out
+*.app
+*.dll
+*.so
+*.dylib
+
+# 編譯產生的目錄
+build/
+bin/
+obj/
+Debug/
+Release/
+x64/
+x86/
+
+# IDE 相關檔案
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vcxproj.filters
+*.vcxproj.user
+
+# 系統檔案
+.DS_Store
+Thumbs.db
+
+# 日誌檔案
+*.log
+
+# 暫存檔案
+*.tmp
+*.temp
+*.swp
+*~
+
+# 其他
+*.bak
+*.backup
+*.old 
