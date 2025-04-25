@@ -48,7 +48,7 @@ class FeatureEngineering:
                 df[f"scaled_{col}"] = 0  
 
         # 計算價格變動百分比：(收盤價 - 開盤價) / 開盤價 * 100
-        df["price_change_percent"] = np.round((df.close - df.open) / df.open, 6) * 100
+        df["scaled_price_change_percent"] = np.round((df.close - df.open) / df.open, 6) * 100
 
         # 處理缺失值（可以選擇填補而非刪除，視情況而定）
         df.dropna(inplace=True)
@@ -59,6 +59,29 @@ class FeatureEngineering:
 
         # 返回處理過的資料
         return df
+
+
+    def windowed(self, df, window_size):
+        # 預先處理好 x 和 y，減少中間過程
+        X_values = [df.X.shift(i) for i in range(window_size-1, -1, -1)]
+        windowed_df = pd.concat(X_values, axis=1, ignore_index=True)
+        windowed_df.columns = [f"x_{i}" for i in range(window_size-1, -1, -1)]
+
+        # 直接獲取 y，並將其調整為下一時間步的值
+        windowed_df["y"] = df["y"].shift(-1)
+
+        # 這裡直接將最後一個 NaN 設為 0（可以根據需要調整）
+        windowed_df["y"].iloc[-1] = windowed_df["y"].iloc[-1] if pd.notna(windowed_df["y"].iloc[-1]) else 0
+
+        # 去除任何可能的 NaN 值
+        windowed_df.dropna(inplace=True)
+
+        # 重設索引
+        windowed_df.reset_index(drop=True, inplace=True)
+
+        # 輸出最終 DataFrame 的大小
+        print(f"windowed Size = {window_size}  : {windowed_df.shape}")
+        return windowed_df
     
 
     def create_features(self, df):
