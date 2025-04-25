@@ -85,8 +85,8 @@ class FeatureEngineering:
         # 將特徵列轉換為列表格式
         ml_data["features"] = df[feature_columns].values.tolist()
         
-        # 使用 price_change_percent 作為標籤
-        ml_data["target"] = df["price_change_percent"]
+        # 使用下一行的 scaled_close 作為標籤
+        ml_data["target"] = df["scaled_close"].shift(-1)
         
         # 計算特徵數量
         feature_count = len(feature_columns)
