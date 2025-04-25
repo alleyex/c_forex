@@ -12,7 +12,7 @@ class DataPreprocessing:
     def __init__(self) -> None:
         pass
 
-    def load_csv(file_path):
+    def load_csv(self, file_path):
         """
         如果檔案存在則載入 CSV 檔案，否則回傳 None。
         """
@@ -26,4 +26,5 @@ class DataPreprocessing:
             # 檔案不存在時印出提示訊息並回傳 None
             print(f"{file_path} 找不到檔案。")
             return None
+
 
