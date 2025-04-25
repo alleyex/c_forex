@@ -32,9 +32,9 @@ def download_file(filename, url):
         print(f"下載文件時發生錯誤：{str(e)}")
         return False
 
-def download_forex_data():
+def _download_forex_data():
     """
-    下載外匯數據文件
+    下載外匯數據文件（私有函數）
     """
     # 下載 USD/JPY 數據文件
     usdjpy_filename = "usdjpy-m1.csv"
@@ -45,6 +45,13 @@ def download_forex_data():
     forex_utils_filename = "forex_utils.py"
     forex_utils_url = "https://raw.githubusercontent.com/alleyex/c_forex/refs/heads/main/forex_utils.py"
     download_file(forex_utils_filename, forex_utils_url)
+
+# 公共接口函數
+def download_forex_data():
+    """
+    公共接口函數，用於下載外匯數據
+    """
+    return _download_forex_data()
 
 if __name__ == "__main__":
     download_forex_data() 
