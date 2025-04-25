@@ -5,8 +5,12 @@ class FeatureEngineering:
     def __init__(self) -> None:
         pass
 
-    def get_data(self):
-        pass
+    def create_indicators(self, df):
+        df["price_change"] = df.close - df.open
+    
+        print(f"Feature Engineering: {df.shape}")
+            
+        return df
 
 class DataPreprocessing:
     def __init__(self) -> None:
