@@ -60,18 +60,18 @@ class FeatureEngineering:
         # 返回處理過的資料
         return df
 
-
     def windowed(self, df, window_size):
         # 預先處理好 x 和 y，減少中間過程
         X_values = [df.X.shift(i) for i in range(window_size-1, -1, -1)]
         windowed_df = pd.concat(X_values, axis=1, ignore_index=True)
         windowed_df.columns = [f"x_{i}" for i in range(window_size-1, -1, -1)]
 
-        # 直接獲取 y，並將其調整為下一時間步的值
+        # 直接獲取 y，並將其調整為下一個時間步的值
         windowed_df["y"] = df["y"].shift(-1)
 
-        # 這裡直接將最後一個 NaN 設為 0（可以根據需要調整）
-        windowed_df["y"].iloc[-1] = windowed_df["y"].iloc[-1] if pd.notna(windowed_df["y"].iloc[-1]) else 0
+        # 使用 .loc 處理最後一個 y 的 NaN 值
+        if pd.isna(windowed_df.loc[windowed_df.index[-1], "y"]):
+            windowed_df.loc[windowed_df.index[-1], "y"] = 0
 
         # 去除任何可能的 NaN 值
         windowed_df.dropna(inplace=True)
@@ -82,7 +82,6 @@ class FeatureEngineering:
         # 輸出最終 DataFrame 的大小
         print(f"windowed Size = {window_size}  : {windowed_df.shape}")
         return windowed_df
-    
 
     def create_features(self, df):
         """
