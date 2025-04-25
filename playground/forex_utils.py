@@ -83,10 +83,10 @@ class FeatureEngineering:
         ml_data = pd.DataFrame()
         
         # 將特徵列轉換為列表格式
-        ml_data["features"] = df[feature_columns].values.tolist()
+        ml_data["X"] = df[feature_columns].values.tolist()
         
         # 使用下一行的 scaled_close 作為標籤
-        ml_data["target"] = df["scaled_close"].shift(-1)
+        ml_data["y"] = df["scaled_close"].shift(-1)
         
         # 計算特徵數量
         feature_count = len(feature_columns)
