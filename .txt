@@ -1,0 +1,5 @@
+[33mb9016b1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m 重構下載代碼，添加通用下載函數
+[33m7095e6c[m Initial commit
+[33m6af9278[m Add playground directory with Jupyter notebook
+[33m9072cb8[m Add .gitignore file
+[33m1841f85[m first commit
