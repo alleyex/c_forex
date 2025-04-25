@@ -1,4 +1,4 @@
-class forex_utils:
+class feature_engineering:
     def __init__(self) -> None:
         pass
 
