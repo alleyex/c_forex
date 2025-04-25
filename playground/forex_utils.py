@@ -59,6 +59,42 @@ class FeatureEngineering:
 
         # 返回處理過的資料
         return df
+    
+
+    def create_features(self, df):
+        """
+        將處理過的數據轉換為機器學習模型可用的特徵和標籤格式。
+        
+        參數:
+            df (pandas.DataFrame): 包含縮放後特徵的數據框
+            
+        返回:
+            tuple: (特徵和標籤的數據框, 特徵數量)
+        """
+        # 找出所有縮放後的特徵列
+        feature_columns = [col for col in df.columns if col.startswith('scaled_')]
+        
+        # 檢查是否有特徵列
+        if not feature_columns:
+            print("警告：沒有找到縮放後的特徵列")
+            return pd.DataFrame(), 0
+        
+        # 創建特徵和標籤的數據框
+        ml_data = pd.DataFrame()
+        
+        # 將特徵列轉換為列表格式
+        ml_data["features"] = df[feature_columns].values.tolist()
+        
+        # 使用 price_change_percent 作為標籤
+        ml_data["target"] = df["price_change_percent"]
+        
+        # 計算特徵數量
+        feature_count = len(feature_columns)
+        
+        # 輸出數據形狀和特徵數量
+        print(f"Features & Lables  : {ml_data.shape.shape}      Number of Features:  {feature_count}")       
+        
+        return ml_data, feature_count
 
 class DataPreprocessing:
     """
