@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 
 class FeatureEngineering:
     """
@@ -28,6 +29,35 @@ class FeatureEngineering:
     
         print(f"Feature Engineering: {df.shape}")
             
+        return df
+    
+    def feature_scaling(self, df):      
+        # 定義價格欄位
+        price_cols = ['open', 'high', 'low', 'close'] 
+        
+        # 對每個價格欄位進行 min-max 標準化
+        for col in price_cols:
+            col_max = df[col].max()
+            col_min = df[col].min()
+            
+            # 如果最大值與最小值不同，則進行 min-max 標準化
+            if col_max != col_min:
+                df[f"scaled_{col}"] = np.round((df[col] - col_min) / (col_max - col_min), 6)
+            else:
+                # 如果最大值與最小值相同，則設定為 0（避免除以 0）
+                df[f"scaled_{col}"] = 0  
+
+        # 計算價格變動百分比：(收盤價 - 開盤價) / 開盤價 * 100
+        df["price_change_percent"] = np.round((df.close - df.open) / df.open, 6) * 100
+
+        # 處理缺失值（可以選擇填補而非刪除，視情況而定）
+        df.dropna(inplace=True)
+        df.reset_index(drop=True, inplace=True)
+
+        # 輸出資料處理後的形狀
+        print(f"feature_scaling    : {df.shape}")
+
+        # 返回處理過的資料
         return df
 
 class DataPreprocessing:
