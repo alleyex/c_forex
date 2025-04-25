@@ -92,7 +92,7 @@ class FeatureEngineering:
         feature_count = len(feature_columns)
         
         # 輸出數據形狀和特徵數量
-        print(f"Features & Lables  : {ml_data.shape.shape}      Number of Features:  {feature_count}")       
+        print(f"Features & Lables  : {ml_data.shape}      Number of Features:  {feature_count}")       
         
         return ml_data, feature_count
 
