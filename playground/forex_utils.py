@@ -61,27 +61,21 @@ class FeatureEngineering:
         return df
 
     def windowed(self, df, window_size):
-        # 預先處理好 x 和 y，減少中間過程
-        X_values = [df.X.shift(i) for i in range(window_size-1, -1, -1)]
-        windowed_df = pd.concat(X_values, axis=1, ignore_index=True)
-        windowed_df.columns = [f"x_{i}" for i in range(window_size-1, -1, -1)]
+        win_df = pd.DataFrame()
 
-        # 直接獲取 y，並將其調整為下一個時間步的值
-        windowed_df["y"] = df["y"].shift(-1)
+        for i in reversed(range(window_size)):
+            win_df[f"x_{i}"] = df.X.shift(i)   
 
-        # 使用 .loc 處理最後一個 y 的 NaN 值
-        if pd.isna(windowed_df.loc[windowed_df.index[-1], "y"]):
-            windowed_df.loc[windowed_df.index[-1], "y"] = 0
-
-        # 去除任何可能的 NaN 值
-        windowed_df.dropna(inplace=True)
-
-        # 重設索引
-        windowed_df.reset_index(drop=True, inplace=True)
-
-        # 輸出最終 DataFrame 的大小
-        print(f"windowed Size = {window_size}  : {windowed_df.shape}")
-        return windowed_df
+        win_df["y"] = df["y"][-win_df.shape[0]:].shift(-1) 
+        if pd.isna(win_df.loc[win_df.index[-1], 'y']):
+          win_df.loc[win_df.index[-1], 'y'] = 0 
+             
+        win_df.dropna(inplace=True)
+        win_df.reset_index(drop = True, inplace = True)
+            
+        print(f"windowed Size = {window_size}  : {win_df.shape}")
+            
+        return win_df
 
     def create_features(self, df):
         """
