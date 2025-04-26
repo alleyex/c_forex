@@ -60,21 +60,42 @@ class FeatureEngineering:
         # 返回處理過的資料
         return df
 
-    def windowed(self, df, window_size):
+    def windowed(self, df: pd.DataFrame, window_size: int) -> pd.DataFrame:
+        """
+        這個函數將時間序列資料轉換為以窗口大小為基準的資料，並為每個窗口創建對應的特徵和標籤。
+
+        參數:
+        - df: 包含特徵（X）和目標值（y）的 DataFrame。
+        - window_size: 整數，指定每個視窗的大小，即多少個時間步。
+
+        回傳:
+        - 返回一個新的 DataFrame，包含所有窗口的特徵和標籤。
+        """
+        
+        # 創建一個空的 DataFrame 來存儲窗口資料
         win_df = pd.DataFrame()
 
+        # 將每個時間步的資料依據窗口大小進行移動
         for i in reversed(range(window_size)):
-            win_df[f"x_{i}"] = df.X.shift(i)   
+            # 每個時間步作為一個特徵，名稱為 x_0, x_1, ..., x_(window_size-1)
+            win_df[f"x_{i}"] = df.X.shift(i)
 
-        win_df["y"] = df["y"][-win_df.shape[0]:].shift(-1) 
+        # 計算目標值 'y'，這是資料集中的 'y' 向前移動一個時間步
+        win_df["y"] = df["y"][-win_df.shape[0]:].shift(-1)
+
+        # 處理最後一筆資料的 'y' 為 NaN 的情況，若是 NaN，則設置為 0
         if pd.isna(win_df.loc[win_df.index[-1], 'y']):
-          win_df.loc[win_df.index[-1], 'y'] = 0 
-             
+            win_df.loc[win_df.index[-1], 'y'] = 0
+
+        # 刪除所有包含 NaN 的行
         win_df.dropna(inplace=True)
-        win_df.reset_index(drop = True, inplace = True)
-            
+
+        # 重設索引
+        win_df.reset_index(drop=True, inplace=True)
+
+        # 打印窗口化後的資料形狀以供檢查
         print(f"windowed Size = {window_size}  : {win_df.shape}")
-            
+
         return win_df
 
     def create_features(self, df):
