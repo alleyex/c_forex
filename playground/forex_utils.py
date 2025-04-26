@@ -30,35 +30,47 @@ class FeatureEngineering:
         print(f"Feature Engineering: {df.shape}")
             
         return df
-    
-    def feature_scaling(self, df):      
-        # 定義價格欄位
-        price_cols = ['open', 'high', 'low', 'close'] 
         
+    def feature_scaling(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        這個函數對價格欄位進行 Min-Max 標準化，並計算價格變動百分比。
+        處理完後會返回一個經過標準化的資料集，並刪除缺失值。
+
+        參數:
+        - df: 包含價格資訊（如 'open', 'high', 'low', 'close'）的 DataFrame。
+
+        回傳:
+        - 返回一個新的 DataFrame，其中包括標準化後的價格欄位和價格變動百分比欄位。
+        """
+        
+        # 定義價格欄位
+        price_cols = ['open', 'high', 'low', 'close']
+
         # 對每個價格欄位進行 min-max 標準化
         for col in price_cols:
-            col_max = df[col].max()
-            col_min = df[col].min()
-            
+            col_max = df[col].max()  # 計算最大值
+            col_min = df[col].min()  # 計算最小值
+
             # 如果最大值與最小值不同，則進行 min-max 標準化
             if col_max != col_min:
                 df[f"scaled_{col}"] = np.round((df[col] - col_min) / (col_max - col_min), 6)
             else:
                 # 如果最大值與最小值相同，則設定為 0（避免除以 0）
-                df[f"scaled_{col}"] = 0  
+                df[f"scaled_{col}"] = 0
 
         # 計算價格變動百分比：(收盤價 - 開盤價) / 開盤價 * 100
         df["scaled_price_change_percent"] = np.round((df.close - df.open) / df.open, 6) * 100
 
         # 處理缺失值（可以選擇填補而非刪除，視情況而定）
-        df.dropna(inplace=True)
-        df.reset_index(drop=True, inplace=True)
+        df.dropna(inplace=True)  # 移除含有 NaN 的行
+        df.reset_index(drop=True, inplace=True)  # 重設索引
 
-        # 輸出資料處理後的形狀
+        # 輸出資料處理後的形狀以供檢查
         print(f"feature_scaling    : {df.shape}")
 
         # 返回處理過的資料
         return df
+
 
     def windowed(self, df: pd.DataFrame, window_size: int) -> pd.DataFrame:
         """
