@@ -146,3 +146,26 @@ class DataPreprocessing:
             return None
 
 
+    def prepare_sequence_data(self, data: pd.DataFrame, window_size: int, features: int) -> np.ndarray:
+        """
+        將原始資料轉換成 (樣本數, window_size, features) 的格式，用於序列模型（例如 LSTM）。
+
+        Args:
+            data (pd.DataFrame): 輸入的資料，每個欄位包含序列型態的 list。
+            window_size (int): 每個樣本的時間步長。
+            features (int): 每個時間步的特徵數。
+
+        Returns:
+            np.ndarray: 轉換後的資料，形狀為 (樣本數, window_size, features)。
+        """
+
+        # 將所有欄位（每列是 list）先各自堆疊成 numpy array
+        stacked_data = np.concatenate([np.stack(data[col].values) for col in data.columns], axis=1)
+
+        # 將堆疊後的資料 reshape 成 (樣本數, window_size, features)
+        reshaped_data = stacked_data.reshape(stacked_data.shape[0], window_size, features)
+
+        # 顯示 reshape 後的資料形狀（方便 debug）
+        print(f"Reshaped Data: {reshaped_data.shape}")
+
+        return reshaped_data
