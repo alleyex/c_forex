@@ -19,18 +19,166 @@ class FeatureEngineering:
         為輸入的數據框創建技術分析指標。
         
         參數:
-            df (pandas.DataFrame): 包含金融數據的數據框，必須包含 'close' 和 'open' 列
+            df (pandas.DataFrame): 包含金融數據的數據框，必須包含以下列：
+                - 'close': 收盤價
+                - 'open': 開盤價
+                - 'high': 最高價
+                - 'low': 最低價
+                - 'volume': 成交量（可選）
             
         返回:
-            pandas.DataFrame: 添加了技術指標的數據框
+            pandas.DataFrame: 添加了技術指標的數據框，包含以下新增列：
+                - 'price_change': 收盤價與開盤價的差值
+                - 'sma_20': 20日簡單移動平均線
+                - 'sma_50': 50日簡單移動平均線
+                - 'ema_12': 12日指數移動平均線
+                - 'ema_26': 26日指數移動平均線
+                - 'rsi_14': 14日相對強弱指標
+                - 'macd_diff': MACD線
+                - 'macd_signal': MACD信號線
+                - 'macd_hist': MACD直方圖
+            
+        說明:
+            - 價格變動（price_change）: 反映單根K線的價格變動幅度
+            - 移動平均線（SMA/EMA）: 用於判斷趨勢方向和支撐壓力位
+            - RSI: 用於判斷超買超賣情況，範圍在0-100之間
+            - MACD: 用於判斷趨勢變化和動量強度
         """
         # 計算收盤價與開盤價的差值，表示價格變動
         df["price_change"] = df.close - df.open
+        
+        # 計算移動平均線
+        df["sma_20"] = self.sma(df.close, 20)  # 20日簡單移動平均線
+        df["sma_50"] = self.sma(df.close, 50)  # 50日簡單移動平均線
+        df["ema_12"] = self.ema(df.close, 12)  # 12日指數移動平均線
+        df["ema_26"] = self.ema(df.close, 26)  # 26日指數移動平均線
+        
+        # 計算RSI指標
+        df["rsi_14"] = self.rsi(df.close, 14)  # 14日相對強弱指標
+        
+        # 計算MACD指標
+        macd_diff, macd_signal, macd_hist = self.macd(df.close)  # 使用預設參數
+        df["macd_diff"] = macd_diff
+        df["macd_signal"] = macd_signal
+        df["macd_hist"] = macd_hist
     
         print(f"Feature Engineering: {df.shape}")
             
         return df
+    
+    def sma(self, data, window):
+        """
+        計算簡單移動平均線（Simple Moving Average, SMA）
         
+        參數:
+            data (pandas.Series): 輸入的數據序列，通常是價格數據（如收盤價）
+            window (int): 計算 SMA 的窗口大小（時間週期）
+            
+        返回:
+            pandas.Series: 計算出的 SMA 序列
+            
+        說明:
+            - SMA 是最基本的技術分析指標之一
+            - 計算方法是取指定窗口大小內所有數據的平均值
+            - 常用於判斷趨勢方向、尋找支撐壓力位
+            - 與 EMA 相比，SMA 對價格變動的反應較慢，但較為平滑
+        """
+        return data.rolling(window).mean()
+    
+    def ema(self, data, window):
+        """
+        計算指數移動平均線（Exponential Moving Average, EMA）
+        
+        參數:
+            data (pandas.Series): 輸入的數據序列，通常是價格數據（如收盤價）
+            window (int): 計算 EMA 的窗口大小（時間週期）
+            
+        返回:
+            pandas.Series: 計算出的 EMA 序列
+            
+        說明:
+            - EMA 是一種技術分析指標，給予較新的數據更高的權重
+            - 與簡單移動平均線（SMA）相比，EMA 對價格變動的反應更快
+            - 常用於判斷趨勢方向、尋找支撐壓力位，以及產生交易信號
+            - adjust=False 表示使用簡單的指數加權計算方式
+        """
+        return data.ewm(span=window, adjust=False).mean()
+    
+    def rsi(self, data, window):
+        """
+        計算相對強弱指標（Relative Strength Index, RSI）
+        
+        參數:
+            data (pandas.Series): 輸入的數據序列，通常是價格數據（如收盤價）
+            window (int): 計算 RSI 的窗口大小（時間週期）
+            
+        返回:
+            pandas.Series: 計算出的 RSI 序列，數值範圍在 0-100 之間
+            
+        說明:
+            - RSI 是一種動量指標，用於衡量價格變動的速度和幅度
+            - 計算步驟：
+                1. 計算價格變動（delta）
+                2. 分別計算上漲和下跌的平均值（gain 和 loss）
+                3. 計算相對強度（RS = gain / loss）
+                4. RSI = 100 - 100 / (1 + RS)
+            - 常用於：
+                - 判斷超買（RSI > 70）和超賣（RSI < 30）情況
+                - 尋找背離信號
+                - 確認趨勢強度
+        """
+        delta = data.diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window).mean()   
+        loss = (-delta.where(delta < 0, 0)).rolling(window).mean()
+        rs = gain / loss
+        return 100 - 100 / (1 + rs)
+    
+    def macd(self, data, short_window=12, long_window=26, signal_window=9):
+        """
+        計算移動平均收斂發散指標（Moving Average Convergence Divergence, MACD）
+        
+        參數:
+            data (pandas.Series): 輸入的價格數據序列（通常是收盤價）
+            short_window (int): 短期 EMA 的週期，預設為 12
+            long_window (int): 長期 EMA 的週期，預設為 26
+            signal_window (int): 信號線的週期，預設為 9
+            
+        返回:
+            tuple: (MACD 線, 信號線, 直方圖)
+                - MACD 線 = 短期 EMA - 長期 EMA
+                - 信號線 = MACD 線的 EMA
+                - 直方圖 = MACD 線 - 信號線
+            
+        說明:
+            - MACD 是一種趨勢跟蹤的動量指標
+            - 計算步驟：
+                1. 計算短期和長期的指數移動平均線（EMA）
+                2. MACD 線 = 短期 EMA - 長期 EMA
+                3. 信號線 = MACD 線的 EMA
+                4. 直方圖 = MACD 線 - 信號線
+            - 常用於：
+                - 判斷趨勢方向（MACD 線在信號線上方為多頭，下方為空頭）
+                - 尋找金叉（MACD 線向上穿越信號線）和死叉（MACD 線向下穿越信號線）
+                - 判斷背離（價格與 MACD 的背離）
+        """
+        # 計算短期和長期的指數移動平均線
+        short_ema = self.ema(data, short_window)
+        long_ema = self.ema(data, long_window)
+        
+        # 計算 MACD 線（短期 EMA 與長期 EMA 的差值）
+        macd_diff = short_ema - long_ema
+        
+        # 計算信號線（MACD 線的 EMA）
+        macd_signal = self.ema(macd_diff, signal_window)
+        
+        # 計算 MACD 直方圖（MACD 線與信號線的差值）
+        macd_hist = macd_diff - macd_signal
+        
+        return macd_diff, macd_signal, macd_hist
+    
+ 
+        
+
     def feature_scaling(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         這個函數對價格欄位進行 Min-Max 標準化，並計算價格變動百分比。
@@ -60,6 +208,22 @@ class FeatureEngineering:
 
         # 計算價格變動百分比：(收盤價 - 開盤價) / 開盤價 * 100
         df["scaled_price_change_percent"] = np.round((df.close - df.open) / df.open, 6) * 100
+  
+        # 對 RSI 指標進行標準化處理
+        # RSI 原始值範圍在 0-100 之間，除以 100 將其轉換為 0-1 範圍
+        # 這樣可以與其他標準化後的指標保持一致的數值範圍
+        for col in ["rsi_14"]:
+            df[f"scaled_{col}"] = np.round((df[col] / 100), 6)
+
+        # 對 MACD 指標進行標準化處理
+        # MACD 指標包含三個主要部分：
+        # 1. MACD 線：快速 EMA 與慢速 EMA 的差值
+        # 2. 信號線：MACD 線的 EMA
+        # 3. MACD 直方圖：MACD 線與信號線的差值
+        # 這些指標的原始值範圍可能差異很大，因此需要分別進行標準化
+        # 使用 np.round 將數值四捨五入到小數點後 6 位，以保持數據精度
+        for col in ["macd_diff", "macd_signal", "macd_hist"]:
+            df[f"scaled_{col}"] = np.round(df[[col]], 6)
 
         # 處理缺失值（可以選擇填補而非刪除，視情況而定）
         df.dropna(inplace=True)  # 移除含有 NaN 的行
@@ -201,4 +365,4 @@ class DataPreprocessing:
         # 顯示 reshape 後的資料形狀（方便 debug）
         print(f"Reshaped Data: {reshaped_data.shape}")
 
-        return reshaped_data
+        return reshaped_data.astype('float32')
