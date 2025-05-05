@@ -1,3 +1,6 @@
+# ===========================================
+# 程式語言相關
+# ===========================================
 # C 編譯產生的檔案
 *.o
 *.obj
@@ -8,6 +11,19 @@
 *.so
 *.dylib
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ===========================================
+# 編譯和建置
+# ===========================================
 # 編譯產生的目錄
 build/
 bin/
@@ -16,10 +32,22 @@ Debug/
 Release/
 x64/
 x86/
+dist/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
 
-# IDE 相關檔案
+# ===========================================
+# IDE 和編輯器
+# ===========================================
+# Visual Studio
 .vs/
-.vscode/
 *.suo
 *.user
 *.userosscache
@@ -27,6 +55,38 @@ x86/
 *.vcxproj.filters
 *.vcxproj.user
 
+# VS Code
+.vscode/
+
+# PyCharm/IntelliJ
+.idea/
+
+# Vim
+*.swp
+*.swo
+
+# ===========================================
+# 環境和設定
+# ===========================================
+# 虛擬環境
+.env
+.venv
+env/
+venv/
+ENV/
+
+# 敏感資訊
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!*.example.json
+playground/credential.json
+playground/credentials.json
+
+# ===========================================
+# 系統和日誌
+# ===========================================
 # 系統檔案
 .DS_Store
 Thumbs.db
@@ -37,52 +97,14 @@ Thumbs.db
 # 暫存檔案
 *.tmp
 *.temp
-*.swp
 *~
-
-# 其他
 *.bak
 *.backup
 *.old
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-*.egg-info/
-.installed.cfg
-*.egg
-
+# ===========================================
+# 其他
+# ===========================================
 # Jupyter Notebook
 .ipynb_checkpoints
 *.ipynb
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Environment
-.env
-.venv
-env/
-venv/
-ENV/
-
-# Logs
-*.log 
