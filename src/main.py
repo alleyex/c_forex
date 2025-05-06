@@ -9,8 +9,7 @@ import warnings
 # 添加父目錄到系統路徑
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.mt5_trading.connection import MT5Connection
-from utils.mt5_trading.history import MT5History
+from utils.mt5_trading import MT5Connection, MT5History
 from utils.utils import setup_logger
 from utils.data_processing import check_data_quality, process_tick_volume, process_spread
 from utils.technical_indicators import calculate_technical_indicators
