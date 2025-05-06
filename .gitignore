@@ -43,6 +43,7 @@ lib64/
 parts/
 sdist/
 var/
+wheels/
 
 # ===========================================
 # IDE 和編輯器
@@ -75,6 +76,8 @@ var/
 env/
 venv/
 ENV/
+env.bak/
+venv.bak/
 
 # 敏感資訊
 *.json
@@ -94,6 +97,7 @@ Thumbs.db
 
 # 日誌檔案
 *.log
+logs/
 
 # 暫存檔案
 *.tmp
@@ -118,3 +122,28 @@ state/
 # Jupyter Notebook
 .ipynb_checkpoints
 *.ipynb
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Data files
+data/
+*.csv
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.xlsx
+*.xls
+*.db
+*.sqlite
+*.sqlite3
