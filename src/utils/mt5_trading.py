@@ -41,7 +41,7 @@ class MT5Connection:
             credentials_file (str): 憑證檔案的名稱，預設為 "credential.json"
         """
         self._is_connected = False  # 連接狀態標記
-        self.logger = setup_logger('MT5Connection')
+        self.logger = setup_logger('MT5Connection', log_dir=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'logs')))
         self.logger.info("初始化 MT5Connection")
         
         # 取得專案根目錄的路徑
@@ -186,7 +186,7 @@ class MT5Account:
         初始化 MT5 帳戶管理器
         """
         self.connection = connection
-        self.logger = setup_logger('MT5Account')
+        self.logger = setup_logger('MT5Account', log_dir=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'logs')))
         self.logger.info("初始化 MT5Account")
         
     def get_account_info(self) -> AccountInfo:
@@ -236,7 +236,7 @@ class MT5Positions:
         初始化 MT5 持倉管理器
         """
         self.connection = connection
-        self.logger = setup_logger('MT5Positions')
+        self.logger = setup_logger('MT5Positions', log_dir=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'logs')))
         self.logger.info("初始化 MT5Positions")
         
     def get_positions(self, symbol: Optional[str] = None) -> List[PositionInfo]:
@@ -248,6 +248,7 @@ class MT5Positions:
             raise ConnectionError("MT5 未連接")
             
         try:
+            self.logger.info(f"正在獲取持倉信息，交易品種: {symbol if symbol else '所有'}")
             positions = mt5.positions_get(symbol=symbol) if symbol else mt5.positions_get()
             if positions is None:
                 error = mt5.last_error()
@@ -269,6 +270,7 @@ class MT5Positions:
                     time=datetime.fromtimestamp(pos.time)
                 ))
                 
+            self.logger.info(f"成功獲取 {len(result)} 筆持倉信息")
             return result
         except Exception as e:
             self.logger.error(f"獲取持倉信息時發生錯誤: {str(e)}")
@@ -283,6 +285,7 @@ class MT5Positions:
             raise ConnectionError("MT5 未連接")
             
         try:
+            self.logger.info(f"正在關閉持倉 {ticket}")
             position = mt5.positions_get(ticket=ticket)
             if position is None or len(position) == 0:
                 error = mt5.last_error()
@@ -310,7 +313,7 @@ class MT5Positions:
                 self.logger.error(f"關閉持倉失敗: {result.comment}")
                 return False
                 
-            self.logger.info(f"關閉持倉成功: {result.comment}")
+            self.logger.info(f"成功關閉持倉 {ticket}: {result.comment}")
             return True
         except Exception as e:
             self.logger.error(f"關閉持倉時發生錯誤: {str(e)}")
@@ -340,7 +343,7 @@ class MT5History:
         初始化 MT5 歷史數據管理器
         """
         self.connection = connection
-        self.logger = setup_logger('MT5History')
+        self.logger = setup_logger('MT5History', log_dir=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'logs')))
         self.logger.info("初始化 MT5History")
         
     def get_historical_data(
@@ -359,6 +362,7 @@ class MT5History:
             raise ConnectionError("MT5 未連接")
             
         try:
+            self.logger.info(f"正在獲取 {symbol} 的歷史數據，時間週期: {timeframe}")
             symbol_info = mt5.symbol_info(symbol)
             if symbol_info is None:
                 self.logger.error(f"交易品種 {symbol} 不存在")
@@ -401,6 +405,7 @@ class MT5History:
             df['time'] = pd.to_datetime(df['time'], unit='s')
             df.set_index('time', inplace=True)
             
+            self.logger.info(f"成功獲取 {len(df)} 筆歷史數據")
             return df
         except Exception as e:
             self.logger.error(f"獲取歷史數據時發生錯誤: {str(e)}")
@@ -421,6 +426,7 @@ class MT5History:
             raise ConnectionError("MT5 未連接")
             
         try:
+            self.logger.info(f"正在獲取 {symbol} 的即時報價數據")
             symbol_info = mt5.symbol_info(symbol)
             if symbol_info is None:
                 self.logger.error(f"交易品種 {symbol} 不存在")
@@ -447,6 +453,7 @@ class MT5History:
             df['time'] = pd.to_datetime(df['time'], unit='s')
             df.set_index('time', inplace=True)
             
+            self.logger.info(f"成功獲取 {len(df)} 筆即時報價數據")
             return df
         except Exception as e:
             self.logger.error(f"獲取即時報價時發生錯誤: {str(e)}")
