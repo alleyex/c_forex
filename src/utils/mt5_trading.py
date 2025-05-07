@@ -20,7 +20,7 @@ from typing import Optional, List, Dict, Any
 # 添加專案根目錄到 Python 路徑
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from utils.utils import setup_logger
+from utils.utils import setup_logger, get_project_root
 
 # ==================== 連接管理 ====================
 class MT5Connection:
@@ -41,11 +41,12 @@ class MT5Connection:
             credentials_file (str): 憑證檔案的名稱，預設為 "credential.json"
         """
         self._is_connected = False  # 連接狀態標記
-        self.logger = setup_logger('MT5Connection', log_dir=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'logs')))
+        
+        self.logger = setup_logger('MT5Connection')
         self.logger.info("初始化 MT5Connection")
         
         # 取得專案根目錄的路徑
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        project_root = get_project_root()
         # 設定憑證檔案的路徑
         self.credentials_path = os.path.join(project_root, "config", credentials_file)
         self._load_credentials(self.credentials_path)
@@ -186,7 +187,7 @@ class MT5Account:
         初始化 MT5 帳戶管理器
         """
         self.connection = connection
-        self.logger = setup_logger('MT5Account', log_dir=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'logs')))
+        self.logger = setup_logger('MT5Account')
         self.logger.info("初始化 MT5Account")
         
     def get_account_info(self) -> AccountInfo:
@@ -236,7 +237,7 @@ class MT5Positions:
         初始化 MT5 持倉管理器
         """
         self.connection = connection
-        self.logger = setup_logger('MT5Positions', log_dir=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'logs')))
+        self.logger = setup_logger('MT5Positions')
         self.logger.info("初始化 MT5Positions")
         
     def get_positions(self, symbol: Optional[str] = None) -> List[PositionInfo]:
@@ -343,7 +344,7 @@ class MT5History:
         初始化 MT5 歷史數據管理器
         """
         self.connection = connection
-        self.logger = setup_logger('MT5History', log_dir=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'logs')))
+        self.logger = setup_logger('MT5History')
         self.logger.info("初始化 MT5History")
         
     def get_historical_data(
@@ -356,6 +357,20 @@ class MT5History:
     ) -> pd.DataFrame:
         """
         獲取歷史K線數據
+        
+        Args:
+            symbol (str): 交易品種
+            timeframe (str): 時間週期 (M1, M5, M15, M30, H1, H4, D1, W1, MN1)
+            start_time (datetime, optional): 開始時間
+            end_time (datetime, optional): 結束時間
+            count (int, optional): 獲取數量
+            
+        Returns:
+            pd.DataFrame: 歷史K線數據
+            
+        Raises:
+            ConnectionError: MT5 未連接
+            ValueError: 交易品種不存在或時間週期不支援
         """
         if not self.connection.is_connected:
             self.logger.error("MT5 未連接")
@@ -363,11 +378,14 @@ class MT5History:
             
         try:
             self.logger.info(f"正在獲取 {symbol} 的歷史數據，時間週期: {timeframe}")
+            
+            # 檢查交易品種
             symbol_info = mt5.symbol_info(symbol)
             if symbol_info is None:
                 self.logger.error(f"交易品種 {symbol} 不存在")
                 raise ValueError(f"交易品種 {symbol} 不存在")
                 
+            # 時間週期映射
             timeframe_map = {
                 'M1': mt5.TIMEFRAME_M1,
                 'M5': mt5.TIMEFRAME_M5,
@@ -384,6 +402,7 @@ class MT5History:
                 self.logger.error(f"不支援的時間週期: {timeframe}")
                 raise ValueError(f"不支援的時間週期: {timeframe}")
                 
+            # 獲取歷史數據
             rates = mt5.copy_rates_range(
                 symbol,
                 timeframe_map[timeframe],
@@ -401,12 +420,14 @@ class MT5History:
                 self.logger.error(f"無法獲取歷史數據: {error}")
                 raise ValueError(f"無法獲取歷史數據: {error}")
                 
+            # 轉換為 DataFrame
             df = pd.DataFrame(rates)
             df['time'] = pd.to_datetime(df['time'], unit='s')
             df.set_index('time', inplace=True)
             
             self.logger.info(f"成功獲取 {len(df)} 筆歷史數據")
             return df
+            
         except Exception as e:
             self.logger.error(f"獲取歷史數據時發生錯誤: {str(e)}")
             raise ValueError(f"獲取歷史數據時發生錯誤: {str(e)}")
@@ -420,6 +441,19 @@ class MT5History:
     ) -> pd.DataFrame:
         """
         獲取即時報價數據
+        
+        Args:
+            symbol (str): 交易品種
+            start_time (datetime, optional): 開始時間
+            end_time (datetime, optional): 結束時間
+            count (int, optional): 獲取數量
+            
+        Returns:
+            pd.DataFrame: 即時報價數據
+            
+        Raises:
+            ConnectionError: MT5 未連接
+            ValueError: 交易品種不存在
         """
         if not self.connection.is_connected:
             self.logger.error("MT5 未連接")
@@ -427,11 +461,14 @@ class MT5History:
             
         try:
             self.logger.info(f"正在獲取 {symbol} 的即時報價數據")
+            
+            # 檢查交易品種
             symbol_info = mt5.symbol_info(symbol)
             if symbol_info is None:
                 self.logger.error(f"交易品種 {symbol} 不存在")
                 raise ValueError(f"交易品種 {symbol} 不存在")
                 
+            # 獲取即時報價
             ticks = mt5.copy_ticks_range(
                 symbol,
                 start_time or datetime(1970, 1, 1),
@@ -449,12 +486,14 @@ class MT5History:
                 self.logger.error(f"無法獲取即時報價: {error}")
                 raise ValueError(f"無法獲取即時報價: {error}")
                 
+            # 轉換為 DataFrame
             df = pd.DataFrame(ticks)
             df['time'] = pd.to_datetime(df['time'], unit='s')
             df.set_index('time', inplace=True)
             
             self.logger.info(f"成功獲取 {len(df)} 筆即時報價數據")
             return df
+            
         except Exception as e:
             self.logger.error(f"獲取即時報價時發生錯誤: {str(e)}")
             raise ValueError(f"獲取即時報價時發生錯誤: {str(e)}")

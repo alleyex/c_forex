@@ -1,19 +1,25 @@
 """
-MT5 交易平台的通用工具函數
+通用工具函數模組
 
-這個模組提供了 MT5 交易平台所需的通用工具函數，包括日誌設置、錯誤處理等功能。
-目前主要包含日誌配置相關的功能，未來可能會擴展更多實用工具。
-
-模組依賴:
-    - logging: Python 標準日誌模組
-    - os: 作業系統相關功能
-    - datetime: 日期時間處理
+此模組提供了專案中常用的工具函數，包括：
+- 專案路徑管理
+- 日誌設置
+- 其他通用功能
 """
 
 import logging
 import os
 from datetime import datetime
 from typing import Optional
+
+def get_project_root() -> str:
+    """
+    獲取專案根目錄的絕對路徑
+    
+    Returns:
+        str: 專案根目錄的絕對路徑
+    """
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def setup_logger(
     name: str,
@@ -32,8 +38,8 @@ def setup_logger(
     
     Args:
         name (str): 日誌記錄器的名稱，通常使用模組名稱
-        log_dir (str, optional): 日誌檔案目錄，預設為 'logs'
-        log_file (str, optional): 日誌檔案名稱，預設為 'mt5_YYYYMMDD.log'
+        log_dir (str, optional): 日誌檔案目錄，預設為專案根目錄下的 'logs'
+        log_file (str, optional): 日誌檔案名稱，預設為 'forex_YYYYMMDD.log'
         level (int, optional): 日誌級別，預設為 logging.INFO
         
     Returns:
@@ -45,7 +51,7 @@ def setup_logger(
     """
     # 設置日誌目錄
     if log_dir is None:
-        log_dir = 'logs'
+        log_dir = os.path.join(get_project_root(), 'logs')
     os.makedirs(log_dir, exist_ok=True)
     
     # 設置日誌檔案名稱

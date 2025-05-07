@@ -3,20 +3,18 @@ import os
 from datetime import datetime, timedelta
 import pandas as pd
 import MetaTrader5 as mt5
-import numpy as np
-import warnings
-import logging
+ 
 
 # 添加父目錄到系統路徑
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.mt5_trading import MT5Connection, MT5History
 from utils.utils import setup_logger
-from utils.data_processing import check_data_quality, process_tick_volume, process_spread
+from utils.data_processing import DataProcessor
 from utils.technical_indicators import TechnicalIndicatorCalculator
 
 # 設置日誌
-logger = setup_logger('forex_trading', log_dir=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'logs'))
+logger = setup_logger('forex_trading')
 
 def get_data():
     """
@@ -24,34 +22,29 @@ def get_data():
     """
     logger.info("開始從 MT5 獲取數據")
     
-    # 初始化 MT5
-    if not mt5.initialize():
-        logger.error("初始化 MT5 失敗")
-        mt5.shutdown()
+    # 初始化 MT5 連接
+    connection = MT5Connection()
+    connection.connect()  # 移除 if 判斷，因為 connect() 方法內部已經有錯誤處理
+    
+    try:
+        # 創建歷史數據處理器
+        history = MT5History(connection)
+        
+        # 直接獲取 99000 筆歷史數據 (M1 時間週期)
+        df = history.get_historical_data("EURUSD", "M5", count=99000)
+        
+        if df is None:
+            logger.error("獲取數據失敗")
+            return None
+            
+        logger.info(f"成功獲取 {len(df)} 筆數據")
+        return df
+        
+    except Exception as e:
+        logger.error(f"獲取數據時發生錯誤: {str(e)}")
         return None
-    
-    # 設置時間範圍
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=30)
-    logger.info(f"獲取數據時間範圍: {start_date} 到 {end_date}")
-    
-    # 獲取 EUR/USD 的歷史數據
-    rates = mt5.copy_rates_range("EURUSD", mt5.TIMEFRAME_M1, start_date, end_date)
-    
-    # 關閉 MT5
-    mt5.shutdown()
-    
-    if rates is None:
-        logger.error("獲取數據失敗")
-        return None
-    
-    # 轉換為 DataFrame
-    df = pd.DataFrame(rates)
-    df['time'] = pd.to_datetime(df['time'], unit='s')
-    df.set_index('time', inplace=True)
-    
-    logger.info(f"成功獲取 {len(df)} 筆數據")
-    return df
+    finally:
+        connection.disconnect()
 
 def main():
     logger.info("程式開始執行")
@@ -72,16 +65,20 @@ def main():
     df.to_csv(raw_data_path)
     logger.info(f"原始數據已保存到: {raw_data_path}")
     
+    # 初始化數據處理器
+    processor = DataProcessor(data_dir)
+    
     # 數據處理
-    df = process_spread(df, data_dir)
-    df = process_tick_volume(df, data_dir)
+    df = processor.process_spread(df)
+    df = processor.process_tick_volume(df)
+    df = processor.process_price_changes(df)
     
     # 計算技術指標
-    calculator = TechnicalIndicatorCalculator(logger=logger)
+    calculator = TechnicalIndicatorCalculator()
     df = calculator.calculate_all_indicators(df)
     
     # 檢查數據質量
-    check_data_quality(df)
+    processor.check_data_quality(df)
     
     # 自創特徵：EMA 差距
     df["ema_gap"] = df["ema_fast"] - df["ema_slow"]
@@ -94,7 +91,9 @@ def main():
         'ema_fast', 'ema_slow', 'ema_gap',
         'rsi', 'macd', 'macd_signal',
         'bb_middle', 'bb_upper', 'bb_lower',
-        'atr'
+        'atr',
+        'price_change_pct', 'volatility', 'normalized_price',
+        'price_change_ma', 'price_change_volatility'
     ]
 
     # 去除 NaN（技術指標開頭幾筆資料可能為空）
